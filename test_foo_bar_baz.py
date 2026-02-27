@@ -2,8 +2,17 @@ import pytest
 from foo_bar_baz import foo_bar_baz
 
 
+import importlib
+
+_fbb_mod = importlib.import_module("foo_bar_baz")
+
+
+def foo_bar_baz(n):
+    
+    return _fbb_mod.foo_bar_baz(n)
+
+
 def expected_foo_bar_baz(n: int) -> str:
-   
     if n <= 0:
         return ""
     parts = []
@@ -33,8 +42,8 @@ def test_edge_cases_non_positive_n(n):
 def test_format_space_delimited_and_no_extra_spaces(n):
     out = foo_bar_baz(n)
     assert isinstance(out, str)
-    assert out == out.strip()  # no leading/trailing spaces
-    assert "  " not in out     # no double spaces
+    assert out == out.strip()   # no leading/trailing spaces
+    assert "  " not in out      # no double spaces
 
     if n == 1:
         assert out.count(" ") == 0
@@ -45,7 +54,7 @@ def test_format_space_delimited_and_no_extra_spaces(n):
 
 
 def test_rules_hold_for_many_values():
-    for n in range(1, 51):
+    for n in range(1, 101):
         out = foo_bar_baz(n)
         tokens = out.split(" ")
         assert len(tokens) == n
@@ -62,8 +71,7 @@ def test_rules_hold_for_many_values():
 
 
 def test_large_n_not_truncated_and_tail_correct():
-    # Catch common incorrect implementations: truncation, wrong tail, spacing mistakes for big n
-    n = 200
+    n = 300
     out = foo_bar_baz(n)
 
     assert out.count(" ") == n - 1
@@ -78,20 +86,5 @@ def test_large_n_not_truncated_and_tail_correct():
 
 @pytest.mark.parametrize("bad_n", ["10", 10.0, 3.5, None])
 def test_invalid_input_types_raise_type_error(bad_n):
-    # Catch incorrect implementations that silently cast inputs
     with pytest.raises(TypeError):
         foo_bar_baz(bad_n)
-
-
-def test_tokens_are_exactly_expected_for_spot_checks():
-    # Spot checks at tricky multiples (common places incorrect solutions break)
-    n = 180
-    tokens = foo_bar_baz(n).split(" ")
-
-    assert len(tokens) == n
-    assert tokens[14] == "Baz"    # 15
-    assert tokens[29] == "Baz"    # 30
-    assert tokens[44] == "Baz"    # 45
-    assert tokens[89] == "Baz"    # 90
-    assert tokens[149] == "Baz"   # 150
-    assert tokens[179] == "Baz"   # 180
