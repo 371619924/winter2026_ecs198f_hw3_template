@@ -1,12 +1,9 @@
 import pytest
-
 from foo_bar_baz import foo_bar_baz
-
-#Add testcases Here
-
 
 
 def expected_foo_bar_baz(n: int) -> str:
+    """Reference implementation used only by tests."""
     if n <= 0:
         return ""
     parts = []
@@ -36,8 +33,8 @@ def test_edge_cases_non_positive_n(n):
 def test_format_space_delimited_and_no_extra_spaces(n):
     out = foo_bar_baz(n)
     assert isinstance(out, str)
-    assert out == out.strip()         
-    assert "  " not in out            
+    assert out == out.strip()  # no leading/trailing spaces
+    assert "  " not in out     # no double spaces
 
     if n == 1:
         assert out.count(" ") == 0
@@ -63,8 +60,9 @@ def test_rules_hold_for_many_values():
             else:
                 assert tok == str(i)
 
-                def test_large_n_not_truncated_and_tail_correct():
-    
+
+def test_large_n_not_truncated_and_tail_correct():
+    # Catch common incorrect implementations: truncation, wrong tail, spacing mistakes for big n
     n = 200
     out = foo_bar_baz(n)
 
@@ -72,26 +70,28 @@ def test_rules_hold_for_many_values():
     tokens = out.split(" ")
     assert len(tokens) == n
 
-    
-    assert tokens[-1] == expected_foo_bar_baz(n).split(" ")[-1]
-    assert tokens[-2] == expected_foo_bar_baz(n).split(" ")[-2]
-    assert tokens[-3] == expected_foo_bar_baz(n).split(" ")[-3]
+    expected_tokens = expected_foo_bar_baz(n).split(" ")
+    assert tokens[-1] == expected_tokens[-1]
+    assert tokens[-2] == expected_tokens[-2]
+    assert tokens[-3] == expected_tokens[-3]
 
 
 @pytest.mark.parametrize("bad_n", ["10", 10.0, 3.5, None])
 def test_invalid_input_types_raise_type_error(bad_n):
-    
+    # Catch incorrect implementations that silently cast inputs
     with pytest.raises(TypeError):
         foo_bar_baz(bad_n)
 
 
 def test_tokens_are_exactly_expected_for_spot_checks():
-    
+    # Spot checks at tricky multiples (common places incorrect solutions break)
     n = 180
     tokens = foo_bar_baz(n).split(" ")
-    assert tokens[14] == "Baz"   # i=15
-    assert tokens[29] == "Baz"   # i=30
-    assert tokens[44] == "Baz"   # i=45
-    assert tokens[89] == "Baz"   # i=90
-    assert tokens[149] == "Baz"  # i=150
-    assert tokens[179] == "Baz"  # i=180
+
+    assert len(tokens) == n
+    assert tokens[14] == "Baz"    # 15
+    assert tokens[29] == "Baz"    # 30
+    assert tokens[44] == "Baz"    # 45
+    assert tokens[89] == "Baz"    # 90
+    assert tokens[149] == "Baz"   # 150
+    assert tokens[179] == "Baz"   # 180
