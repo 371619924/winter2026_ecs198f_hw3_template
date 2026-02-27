@@ -3,7 +3,7 @@ from foo_bar_baz import foo_bar_baz
 
 
 def expected_foo_bar_baz(n: int) -> str:
-    """Reference implementation used only by tests."""
+   
     if n <= 0:
         return ""
     parts = []
