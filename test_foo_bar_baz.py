@@ -4,8 +4,6 @@ from foo_bar_baz import foo_bar_baz
 
 #Add testcases Here
 
-import pytest
-from foo_bar_baz import foo_bar_baz
 
 
 def expected_foo_bar_baz(n: int) -> str:
