@@ -62,3 +62,36 @@ def test_rules_hold_for_many_values():
                 assert tok == "Bar"
             else:
                 assert tok == str(i)
+
+                def test_large_n_not_truncated_and_tail_correct():
+    
+    n = 200
+    out = foo_bar_baz(n)
+
+    assert out.count(" ") == n - 1
+    tokens = out.split(" ")
+    assert len(tokens) == n
+
+    
+    assert tokens[-1] == expected_foo_bar_baz(n).split(" ")[-1]
+    assert tokens[-2] == expected_foo_bar_baz(n).split(" ")[-2]
+    assert tokens[-3] == expected_foo_bar_baz(n).split(" ")[-3]
+
+
+@pytest.mark.parametrize("bad_n", ["10", 10.0, 3.5, None])
+def test_invalid_input_types_raise_type_error(bad_n):
+    
+    with pytest.raises(TypeError):
+        foo_bar_baz(bad_n)
+
+
+def test_tokens_are_exactly_expected_for_spot_checks():
+    
+    n = 180
+    tokens = foo_bar_baz(n).split(" ")
+    assert tokens[14] == "Baz"   # i=15
+    assert tokens[29] == "Baz"   # i=30
+    assert tokens[44] == "Baz"   # i=45
+    assert tokens[89] == "Baz"   # i=90
+    assert tokens[149] == "Baz"  # i=150
+    assert tokens[179] == "Baz"  # i=180
