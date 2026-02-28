@@ -1,58 +1,96 @@
 import pytest
-import foo_bar_baz as fbb
+from foo_bar_baz import foo_bar_baz  
 
 
-def _expected_token(i: int) -> str:
-    if i % 15 == 0:
-        return "Baz"
-    if i % 3 == 0:
-        return "Foo"
-    if i % 5 == 0:
-        return "Bar"
-    return str(i)
+import sys
+import importlib
+
+def foo_bar_baz(n):
+   
+    mod = sys.modules.get("foo_bar_baz")
+    if mod is None:
+        mod = importlib.import_module("foo_bar_baz")
+    return mod.foo_bar_baz(n)
 
 
-def _expected_str(n: int) -> str:
-    if n < 1:
+@pytest.fixture(autouse=True, scope="session")
+def _ensure_module_loaded():
+ 
+    importlib.import_module("foo_bar_baz")
+
+
+def expected_foo_bar_baz(n: int) -> str:
+    if n <= 0:
         return ""
-    return " ".join(_expected_token(i) for i in range(1, n + 1))
+    parts = []
+    for i in range(1, n + 1):
+        if i % 15 == 0:
+            parts.append("Baz")
+        elif i % 3 == 0:
+            parts.append("Foo")
+        elif i % 5 == 0:
+            parts.append("Bar")
+        else:
+            parts.append(str(i))
+    return " ".join(parts)
 
 
-@pytest.mark.parametrize(
-    "n, expected",
-    [
-        (1, "1"),
-        (2, "1 2"),
-        (3, "1 2 Foo"),
-        (5, "1 2 Foo 4 Bar"),
-        (15, "1 2 Foo 4 Bar Foo 7 8 Foo Bar 11 Foo 13 14 Baz"),
-    ],
-)
-def test_known_examples(n, expected):
-    assert fbb.foo_bar_baz(n) == expected
+@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 6, 10, 14, 15, 16, 30])
+def test_exact_output_matches_expected(n):
+    assert foo_bar_baz(n) == expected_foo_bar_baz(n)
 
 
 @pytest.mark.parametrize("n", [0, -1, -10])
-def test_zero_and_negative_returns_empty_string(n):
-    assert fbb.foo_bar_baz(n) == ""
+def test_edge_cases_non_positive_n(n):
+    assert foo_bar_baz(n) == ""
 
 
-@pytest.mark.parametrize("n", [1, 3, 5, 6, 10, 15, 16, 30, 50])
-def test_matches_reference_implementation(n):
-    assert fbb.foo_bar_baz(n) == _expected_str(n)
-
-
-def test_output_format_is_space_delimited_for_positive_n():
-    n = 20
-    out = fbb.foo_bar_baz(n)
-
+@pytest.mark.parametrize("n", [1, 2, 3, 5, 15, 25])
+def test_format_space_delimited_and_no_extra_spaces(n):
+    out = foo_bar_baz(n)
     assert isinstance(out, str)
-    assert out == out.strip()
-    assert "  " not in out
+    assert out == out.strip()   # no leading/trailing spaces
+    assert "  " not in out      # no double spaces
 
+    if n == 1:
+        assert out.count(" ") == 0
+        assert len(out.split(" ")) == 1
+    else:
+        assert out.count(" ") == n - 1
+        assert len(out.split(" ")) == n
+
+
+def test_rules_hold_for_many_values():
+    for n in range(1, 101):
+        tokens = foo_bar_baz(n).split(" ")
+        assert len(tokens) == n
+
+        for i, tok in enumerate(tokens, start=1):
+            if i % 15 == 0:
+                assert tok == "Baz"
+            elif i % 3 == 0:
+                assert tok == "Foo"
+            elif i % 5 == 0:
+                assert tok == "Bar"
+            else:
+                assert tok == str(i)
+
+
+def test_large_n_not_truncated_and_tail_correct():
+    n = 300
+    out = foo_bar_baz(n)
+
+    assert out.count(" ") == n - 1
     tokens = out.split(" ")
     assert len(tokens) == n
 
-    for idx, tok in enumerate(tokens, start=1):
-        assert tok in {"Foo", "Bar", "Baz"} or tok.isdigit()
-        assert tok == _expected_token(idx)
+    expected_tokens = expected_foo_bar_baz(n).split(" ")
+    assert tokens[-1] == expected_tokens[-1]
+    assert tokens[-2] == expected_tokens[-2]
+    assert tokens[-3] == expected_tokens[-3]
+
+
+@pytest.mark.parametrize("bad_n", ["10", 10.0, 3.5, None])
+def test_invalid_input_types_raise_type_error(bad_n):
+    with pytest.raises(TypeError):
+        foo_bar_baz(bad_n)
