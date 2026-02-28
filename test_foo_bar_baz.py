@@ -1,6 +1,5 @@
 import pytest
-
-from foo_bar_baz import foo_bar_baz
+import foo_bar_baz as fbb
 
 
 def _expected_token(i: int) -> str:
@@ -30,37 +29,30 @@ def _expected_str(n: int) -> str:
     ],
 )
 def test_known_examples(n, expected):
-    assert foo_bar_baz(n) == expected
+    assert fbb.foo_bar_baz(n) == expected
 
 
 @pytest.mark.parametrize("n", [0, -1, -10])
 def test_zero_and_negative_returns_empty_string(n):
- 
-    assert foo_bar_baz(n) == ""
+    assert fbb.foo_bar_baz(n) == ""
 
 
 @pytest.mark.parametrize("n", [1, 3, 5, 6, 10, 15, 16, 30, 50])
 def test_matches_reference_implementation(n):
-    assert foo_bar_baz(n) == _expected_str(n)
+    assert fbb.foo_bar_baz(n) == _expected_str(n)
 
 
 def test_output_format_is_space_delimited_for_positive_n():
     n = 20
-    out = foo_bar_baz(n)
+    out = fbb.foo_bar_baz(n)
 
-   
     assert isinstance(out, str)
-
-   
     assert out == out.strip()
-
-    
     assert "  " not in out
 
     tokens = out.split(" ")
     assert len(tokens) == n
 
-   
     for idx, tok in enumerate(tokens, start=1):
         assert tok in {"Foo", "Bar", "Baz"} or tok.isdigit()
         assert tok == _expected_token(idx)
